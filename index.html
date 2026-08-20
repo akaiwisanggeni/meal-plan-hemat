@@ -2119,25 +2119,59 @@
 
 
         }
+        .history-header {
 
-
-
-
-        .history-title {
-
-
-            color: var(--green);
-            font-size: 17px;
-            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
             margin-bottom: 14px;
-
 
         }
 
 
+        .history-title {
+
+            color: var(--green);
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 0;
+
+        }
 
 
-        .history-row {
+        .download-weight-button {
+
+            border: 1px solid var(--green);
+            background: transparent;
+            color: var(--green);
+            border-radius: 12px;
+            padding: 9px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: .2s ease;
+
+        }
+
+
+        .download-weight-button:hover {
+
+            background: var(--green);
+            color: var(--white);
+
+        }
+
+
+        .download-weight-button:disabled {
+
+            opacity: .55;
+            cursor: not-allowed;
+
+        }
+
+.history-row {
 
 
             display: flex;
@@ -5046,8 +5080,18 @@
             <section class="weight-tool-card">
 
 
-                <div class="history-title">
-                    Riwayat 6 Bulan
+                <div class="history-header">
+                    <div class="history-title">
+                        Riwayat 6 Bulan
+                    </div>
+
+                    <button
+                        id="downloadWeightData"
+                        class="download-weight-button"
+                        type="button"
+                    >
+                        ↓ Download Data
+                    </button>
                 </div>
 
 

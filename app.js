@@ -22,7 +22,7 @@ const SUPABASE_PUBLISHABLE_KEY =
 
 
 const REDIRECT_URL =
-    window.location.origin + "/";
+    "https://mealplanhemat.netlify.app/";
 
 
 
@@ -6817,6 +6817,12 @@ supabaseScript.onload =
         );
 
 
+    const downloadWeightDataButton =
+        document.getElementById(
+            "downloadWeightData"
+        );
+
+
 
 
     const weightChart =
@@ -8373,6 +8379,128 @@ supabaseScript.onload =
 
 
 
+
+
+    // ==========================================
+    // DOWNLOAD WEIGHT DATA
+    // ==========================================
+
+    function downloadWeightData() {
+
+        if (!downloadWeightDataButton) {
+            return;
+        }
+
+        if (!weightLogs || weightLogs.length === 0) {
+            alert(
+                "Belum ada data berat badan dalam 6 bulan terakhir."
+            );
+            return;
+        }
+
+        const rows = [
+            ["Tanggal", "Berat (kg)"]
+        ];
+
+        const exportLogs =
+            [...weightLogs].sort(function(a, b) {
+                return (
+                    new Date(b.logged_at) -
+                    new Date(a.logged_at)
+                );
+            });
+
+        exportLogs.forEach(function(log) {
+
+            rows.push([
+                log.logged_at,
+                Number(log.weight)
+            ]);
+
+        });
+
+        const csv =
+            rows
+                .map(function(row) {
+
+                    return row
+                        .map(function(value) {
+
+                            const text =
+                                String(
+                                    value === null ||
+                                    value === undefined
+                                        ? ""
+                                        : value
+                                );
+
+                            return '"' +
+                                text.replace(
+                                    /"/g,
+                                    '""'
+                                ) +
+                                '"';
+
+                        })
+                        .join(",");
+
+                })
+                .join("\r\n");
+
+        const csvWithBom =
+            "\uFEFF" +
+            csv;
+
+        const blob =
+            new Blob(
+                [csvWithBom],
+                {
+                    type:
+                        "text/csv;charset=utf-8;"
+                }
+            );
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+        link.href =
+            url;
+
+        link.download =
+            "MPH-BB-Tracker-6-Bulan.csv";
+
+        document.body.appendChild(
+            link
+        );
+
+        link.click();
+
+        document.body.removeChild(
+            link
+        );
+
+        URL.revokeObjectURL(
+            url
+        );
+
+    }
+
+
+    if (downloadWeightDataButton) {
+
+        downloadWeightDataButton.addEventListener(
+            "click",
+            downloadWeightData
+        );
+
+    }
 
 
     // ==========================================
