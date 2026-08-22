@@ -2776,7 +2776,10 @@
 
 
                 min-width: 145px;
-                padding: 16px;
+                padding: 13px 16px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
 
 
             }
@@ -2787,7 +2790,36 @@
             .streak-number {
 
 
-                font-size: 34px;
+                font-size: 30px;
+                line-height: 1;
+                white-space: nowrap;
+
+
+            }
+
+
+
+
+            .streak-label {
+
+
+                margin-top: 0;
+                font-size: 15px;
+                white-space: nowrap;
+
+
+            }
+
+
+
+
+            .streak-sub {
+
+
+                margin-top: 0;
+                margin-left: auto;
+                font-size: 14px;
+                white-space: nowrap;
 
 
             }
@@ -2798,7 +2830,21 @@
             .progress-columns {
 
 
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 10px;
+
+
+            }
+
+
+
+
+            .progress-item {
+
+
+                min-height: 92px;
+                gap: 9px;
+                min-width: 0;
 
 
             }
@@ -2809,11 +2855,83 @@
             .progress-item + .progress-item {
 
 
-                border-left: none;
-                border-top: 1px solid var(--line);
-                padding-left: 0;
-                padding-top: 18px;
-                margin-top: 18px;
+                border-left: 1px solid var(--line);
+                border-top: none;
+                padding-left: 10px;
+                padding-top: 0;
+                margin-top: 0;
+
+
+            }
+
+
+
+
+            .progress-icon {
+
+
+                width: 52px;
+                height: 52px;
+                flex: 0 0 52px;
+
+
+            }
+
+
+
+
+            .progress-icon .mph-icon {
+
+
+                width: 40px;
+                height: 40px;
+
+
+            }
+
+
+
+
+            .progress-label {
+
+
+                font-size: 14px;
+                margin-bottom: 4px;
+
+
+            }
+
+
+
+
+            .progress-value {
+
+
+                font-size: 26px;
+
+
+            }
+
+
+
+
+            .progress-value span {
+
+
+                font-size: 15px;
+
+
+            }
+
+
+
+
+            .progress-note {
+
+
+                margin-top: 5px;
+                font-size: 11px;
+                line-height: 1.35;
 
 
             }

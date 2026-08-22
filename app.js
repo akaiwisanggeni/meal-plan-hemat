@@ -22,7 +22,7 @@ const SUPABASE_PUBLISHABLE_KEY =
 
 
 const REDIRECT_URL =
-    window.location.origin + "/";
+    "https://mealplanhemat.netlify.app/";
 
 
 
