@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // MEAL PLAN HEMAT
 // Supabase + Magic Link + Dashboard
 // Ebook + Daily Calorie + Calorie Needs
@@ -209,6 +209,36 @@ supabaseScript.onload =
         );
 
 
+    const pdfViewerScreen =
+        document.getElementById(
+            "pdfViewerScreen"
+        );
+
+
+    const pdfViewerBackButton =
+        document.getElementById(
+            "pdfViewerBackButton"
+        );
+
+
+    const pdfViewerTitle =
+        document.getElementById(
+            "pdfViewerTitle"
+        );
+
+
+    const pdfViewerContent =
+        document.getElementById(
+            "pdfViewerContent"
+        );
+
+
+    const pdfViewerStatus =
+        document.getElementById(
+            "pdfViewerStatus"
+        );
+
+
 
 
     const loginButton =
@@ -325,6 +355,16 @@ supabaseScript.onload =
         }
 
 
+        if (pdfViewerScreen) {
+
+
+            pdfViewerScreen.style.display =
+                "none";
+
+
+        }
+
+
 
 
     }
@@ -368,6 +408,16 @@ supabaseScript.onload =
 
 
             habitScreen.style.display =
+                "none";
+
+
+        }
+
+
+        if (pdfViewerScreen) {
+
+
+            pdfViewerScreen.style.display =
                 "none";
 
 
@@ -437,6 +487,16 @@ supabaseScript.onload =
         }
 
 
+        if (pdfViewerScreen) {
+
+
+            pdfViewerScreen.style.display =
+                "none";
+
+
+        }
+
+
 
 
         window.scrollTo(
@@ -489,6 +549,16 @@ supabaseScript.onload =
 
 
             habitScreen.style.display =
+                "none";
+
+
+        }
+
+
+        if (pdfViewerScreen) {
+
+
+            pdfViewerScreen.style.display =
                 "none";
 
 
@@ -553,6 +623,16 @@ supabaseScript.onload =
         }
 
 
+        if (pdfViewerScreen) {
+
+
+            pdfViewerScreen.style.display =
+                "none";
+
+
+        }
+
+
 
 
         window.scrollTo(
@@ -592,76 +672,300 @@ supabaseScript.onload =
 
 
 
+    const EBOOK_TITLES = {
+
+        "30 Menu Ayam dan Telur_.pdf":
+            "30 Menu Ayam dan Telur",
+
+        "Weekly Shopping List_.pdf":
+            "Weekly Shopping List",
+
+        "Food Portion Guide_.pdf":
+            "Food Portion Guide",
+
+        "Calorie Cheat Sheet_.pdf":
+            "Calorie Cheat Sheet",
+
+        "Meal Plan Mix & Match_.pdf":
+            "Meal Plan Mix & Match",
+
+        "Healthy Snack Guide_.pdf":
+            "Healthy Snack Guide",
+
+        "30 Days Meal Planner_.pdf":
+            "30 Days Meal Planner"
+
+    };
+
+
+    let activePdfUrl = null;
+
+
+    function hideAllScreensForPdf() {
+
+        loginScreen.style.display =
+            "none";
+
+        dashboardScreen.style.display =
+            "none";
+
+        calorieScreen.style.display =
+            "none";
+
+        weightScreen.style.display =
+            "none";
+
+        if (habitScreen) {
+
+            habitScreen.style.display =
+                "none";
+
+        }
+
+        if (pdfViewerScreen) {
+
+            pdfViewerScreen.style.display =
+                "block";
+
+        }
+
+        window.scrollTo(
+            0,
+            0
+        );
+
+    }
+
+
+    function clearPdfViewer() {
+
+        if (!pdfViewerContent) {
+            return;
+        }
+
+        pdfViewerContent.innerHTML =
+            '<div id="pdfViewerStatus" class="pdf-viewer-status">Memuat ebook...</div>';
+
+    }
+
+
+    async function renderPdfDocument(
+        pdfUrl
+    ) {
+
+        if (
+            !window.pdfjsLib ||
+            !window.pdfjsLib.getDocument
+        ) {
+
+            throw new Error(
+                "PDF.js tidak tersedia."
+            );
+
+        }
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+        const loadingTask =
+            window.pdfjsLib.getDocument({
+                url: pdfUrl,
+                withCredentials: false
+            });
+
+        const pdf =
+            await loadingTask.promise;
+
+        const fragment =
+            document.createDocumentFragment();
+
+        for (
+            let pageNumber = 1;
+            pageNumber <= pdf.numPages;
+            pageNumber += 1
+        ) {
+
+            const page =
+                await pdf.getPage(pageNumber);
+
+            const baseViewport =
+                page.getViewport({
+                    scale: 1
+                });
+
+            const availableWidth =
+                Math.min(
+                    880,
+                    Math.max(
+                        280,
+                        pdfViewerContent.clientWidth - 10
+                    )
+                );
+
+            const scale =
+                availableWidth /
+                baseViewport.width;
+
+            const viewport =
+                page.getViewport({
+                    scale: scale
+                });
+
+            const outputScale =
+                Math.min(
+                    window.devicePixelRatio || 1,
+                    2
+                );
+
+            const pageWrap =
+                document.createElement(
+                    "div"
+                );
+
+            pageWrap.className =
+                "pdf-page-wrap";
+
+            const canvas =
+                document.createElement(
+                    "canvas"
+                );
+
+            canvas.width =
+                Math.floor(
+                    viewport.width *
+                    outputScale
+                );
+
+            canvas.height =
+                Math.floor(
+                    viewport.height *
+                    outputScale
+                );
+
+            canvas.style.width =
+                viewport.width +
+                "px";
+
+            canvas.style.height =
+                viewport.height +
+                "px";
+
+            pageWrap.appendChild(
+                canvas
+            );
+
+            fragment.appendChild(
+                pageWrap
+            );
+
+            const context =
+                canvas.getContext(
+                    "2d"
+                );
+
+            await page.render({
+                canvasContext:
+                    context,
+                viewport:
+                    viewport,
+                transform:
+                    outputScale !== 1
+                        ? [
+                            outputScale,
+                            0,
+                            0,
+                            outputScale,
+                            0,
+                            0
+                        ]
+                        : null
+            }).promise;
+
+        }
+
+        pdfViewerContent.innerHTML = "";
+        pdfViewerContent.appendChild(
+            fragment
+        );
+
+    }
+
+
     async function openEbook(
         fileName
     ) {
 
+        if (!fileName) {
+            return;
+        }
 
+        hideAllScreensForPdf();
+        clearPdfViewer();
 
+        if (pdfViewerTitle) {
 
-        const {
-            data,
-            error
-        } =
-            await window.mphSupabase
-                .storage
-                .from(
-                    STORAGE_BUCKET
-                )
-                .createSignedUrl(
-                    fileName,
-                    3600
+            pdfViewerTitle.textContent =
+                EBOOK_TITLES[fileName] ||
+                "Ebook";
+
+        }
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await window.mphSupabase
+                    .storage
+                    .from(
+                        STORAGE_BUCKET
+                    )
+                    .createSignedUrl(
+                        fileName,
+                        3600
+                    );
+
+            if (
+                error ||
+                !data ||
+                !data.signedUrl
+            ) {
+
+                throw (
+                    error ||
+                    new Error(
+                        "Signed URL tidak tersedia."
+                    )
                 );
 
+            }
 
+            activePdfUrl =
+                data.signedUrl;
 
+            await renderPdfDocument(
+                activePdfUrl
+            );
 
-        if (error) {
-
-
-
+        }
+        catch (error) {
 
             console.error(
                 "MPH: Gagal membuka ebook.",
                 error
             );
 
+            if (pdfViewerContent) {
 
+                pdfViewerContent.innerHTML =
+                    '<div class="pdf-viewer-status">Ebook tidak dapat dibuka. Silakan coba lagi.</div>';
 
-
-            alert(
-                "Ebook tidak dapat dibuka. Silakan coba lagi."
-            );
-
-
-
-
-            return;
-
+            }
 
         }
-
-
-
-
-        if (
-            data &&
-            data.signedUrl
-        ) {
-
-
-
-
-            window.location.href =
-                data.signedUrl;
-
-
-        }
-
 
     }
-
-
 
 
 
@@ -749,6 +1053,46 @@ supabaseScript.onload =
 
         });
 
+
+
+    if (pdfViewerBackButton) {
+
+        pdfViewerBackButton.addEventListener(
+            "click",
+            async function () {
+
+                activePdfUrl = null;
+
+                let session =
+                    mphPendingSession;
+
+                if (!session) {
+
+                    session =
+                        (
+                            await window.mphSupabase
+                                .auth
+                                .getSession()
+                        ).data.session;
+
+                }
+
+                if (session) {
+
+                    await showDashboard(
+                        session
+                    );
+
+                } else {
+
+                    showLogin();
+
+                }
+
+            }
+        );
+
+    }
 
 
     // ==========================================
