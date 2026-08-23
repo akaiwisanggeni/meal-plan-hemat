@@ -4582,6 +4582,176 @@ supabaseScript.onload =
 
 
     // ==========================================
+    // DOWNLOAD HABIT DATA
+    // ==========================================
+
+    function downloadHabitData() {
+
+        const button =
+            document.getElementById(
+                "downloadHabitData"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        const dates =
+            getWeekDates(
+                habitWeekOffset
+            );
+
+        if (!dates || dates.length === 0) {
+            alert(
+                "Data habit belum tersedia."
+            );
+            return;
+        }
+
+        const rows = [
+            [
+                "Tanggal",
+                ...activeHabits.map(function(habit) {
+                    return habit.name;
+                }),
+                "Selesai",
+                "Total Habit"
+            ]
+        ];
+
+        dates.forEach(function(date) {
+
+            const logs =
+                habitDataCache[date] ||
+                [];
+
+            const completedIds =
+                new Set(
+                    logs
+                        .filter(function(log) {
+                            return log.completed === true;
+                        })
+                        .map(function(log) {
+                            return log.habit_id;
+                        })
+                );
+
+            const completedCount =
+                activeHabits.filter(function(habit) {
+                    return completedIds.has(habit.id);
+                }).length;
+
+            const dateParts =
+                String(date || "").split("-");
+
+            const exportDate =
+                dateParts.length === 3
+                    ? dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0]
+                    : date;
+
+            rows.push([
+                exportDate,
+                ...activeHabits.map(function(habit) {
+                    return completedIds.has(habit.id)
+                        ? "Selesai"
+                        : "Belum";
+                }),
+                completedCount,
+                activeHabits.length
+            ]);
+
+        });
+
+        const csv =
+            rows
+                .map(function(row) {
+
+                    return row
+                        .map(function(value) {
+
+                            const csvText =
+                                String(
+                                    value === null ||
+                                    value === undefined
+                                        ? ""
+                                        : value
+                                );
+
+                            return '"' +
+                                csvText.replace(
+                                    /"/g,
+                                    '""'
+                                ) +
+                                '"';
+
+                        })
+                        .join(",");
+
+                })
+                .join("\r\n");
+
+        const csvWithBom =
+            "\uFEFF" +
+            csv;
+
+        const blob =
+            new Blob(
+                [csvWithBom],
+                {
+                    type:
+                        "text/csv;charset=utf-8;"
+                }
+            );
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+        const link =
+            document.createElement(
+                "a"
+            );
+
+        link.href =
+            url;
+
+        link.download =
+            "MPH-Habit-Tracker-Minggu-Ini.csv";
+
+        document.body.appendChild(
+            link
+        );
+
+        link.click();
+
+        document.body.removeChild(
+            link
+        );
+
+        URL.revokeObjectURL(
+            url
+        );
+
+    }
+
+
+    const downloadHabitDataButton =
+        document.getElementById(
+            "downloadHabitData"
+        );
+
+    if (downloadHabitDataButton) {
+
+        downloadHabitDataButton.addEventListener(
+            "click",
+            downloadHabitData
+        );
+
+    }
+
+
+    // ==========================================
     // DISABLE HABIT
     // ==========================================
 
@@ -8756,13 +8926,13 @@ supabaseScript.onload =
 
         exportLogs.forEach(function(log) {
 
-            // Export tanggal sebagai teks agar Excel tidak mengubahnya
-            // menjadi serial date / menampilkan #### karena format kolom.
+            const dateParts =
+                String(log.logged_at || "").split("-");
+
             const exportDate =
-                log.logged_at
-                    .split("-")
-                    .reverse()
-                    .join("/");
+                dateParts.length === 3
+                    ? dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0]
+                    : log.logged_at;
 
             rows.push([
                 exportDate,
