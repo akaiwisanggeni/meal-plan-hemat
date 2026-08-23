@@ -2241,15 +2241,17 @@
         }
 
 
-        .download-weight-button {
+        .tracker-download-button {
 
-            border: 1px solid var(--green);
-            background: transparent;
-            color: var(--green);
-            border-radius: 12px;
-            padding: 9px 12px;
+            display: block;
+            margin: 14px auto 0;
+            border: 1px solid #d9d4c8;
+            background: white;
+            color: #555;
+            border-radius: 10px;
+            padding: 8px 12px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 700;
             cursor: pointer;
             white-space: nowrap;
             transition: .2s ease;
@@ -2257,15 +2259,14 @@
         }
 
 
-        .download-weight-button:hover {
+        .tracker-download-button:hover {
 
-            background: var(--green);
-            color: var(--white);
+            background: #f7f4ed;
 
         }
 
 
-        .download-weight-button:disabled {
+        .tracker-download-button:disabled {
 
             opacity: .55;
             cursor: not-allowed;
@@ -5308,13 +5309,6 @@
                         Riwayat 6 Bulan
                     </div>
 
-                    <button
-                        id="downloadWeightData"
-                        class="download-weight-button"
-                        type="button"
-                    >
-                        ↓ Download Data
-                    </button>
                 </div>
 
 
@@ -5331,6 +5325,15 @@
 
 
                 </div>
+
+
+                <button
+                    id="downloadWeightData"
+                    class="tracker-download-button"
+                    type="button"
+                >
+                    ↓ Download CSV
+                </button>
 
 
             </section>
@@ -5577,6 +5580,15 @@
                     id="habitWeekGrid"
                     class="habit-week-grid"
                 ></div>
+
+
+                <button
+                    id="downloadHabitData"
+                    class="tracker-download-button"
+                    type="button"
+                >
+                    ↓ Download CSV
+                </button>
 
 
             </section>
