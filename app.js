@@ -22,7 +22,7 @@ const SUPABASE_PUBLISHABLE_KEY =
 
 
 const REDIRECT_URL =
-    "https://mealplanhemat.vercel.app/";
+    "https://meal-plan-hemat.vercel.app/";
 
 
 
@@ -2173,11 +2173,6 @@ supabaseScript.onload =
         );
 
 
-    const downloadHabitDataButton =
-        document.getElementById(
-            "downloadHabitData"
-        );
-
 
 
     const habitPrevWeek =
@@ -2270,125 +2265,6 @@ supabaseScript.onload =
 
     let habitDataCache =
         {};
-
-
-
-    // ==========================================
-    // DOWNLOAD HABIT DATA
-    // ==========================================
-
-    function downloadHabitData() {
-
-        if (!downloadHabitDataButton) {
-            return;
-        }
-
-        getCurrentUser().then(async function(user) {
-
-            if (!user) {
-                return;
-            }
-
-            const today = getTodayDate();
-            const cutoff = getSixMonthsAgo();
-
-            const {
-                data: habits,
-                error: habitError
-            } = await window.mphSupabase
-                .from("habits")
-                .select("id, name, sort_order")
-                .eq("user_id", user.id)
-                .eq("is_active", true)
-                .order("sort_order", { ascending: true });
-
-            if (habitError) {
-                console.error("MPH: Gagal mengambil habits untuk CSV.", habitError);
-                alert("Data habit gagal diambil.");
-                return;
-            }
-
-            if (!habits || habits.length === 0) {
-                alert("Belum ada habit untuk di-download.");
-                return;
-            }
-
-            const {
-                data: logs,
-                error: logError
-            } = await window.mphSupabase
-                .from("habit_logs")
-                .select("habit_id, logged_date, completed")
-                .eq("user_id", user.id)
-                .gte("logged_date", cutoff)
-                .lte("logged_date", today);
-
-            if (logError) {
-                console.error("MPH: Gagal mengambil habit logs untuk CSV.", logError);
-                alert("Riwayat habit gagal diambil.");
-                return;
-            }
-
-            if (!logs || logs.length === 0) {
-                alert("Belum ada riwayat habit dalam 6 bulan terakhir.");
-                return;
-            }
-
-            const logsByDate = {};
-
-            logs.forEach(function(log) {
-                if (!logsByDate[log.logged_date]) {
-                    logsByDate[log.logged_date] = {};
-                }
-                logsByDate[log.logged_date][log.habit_id] = log.completed === true;
-            });
-
-            const dates = Object.keys(logsByDate).sort();
-            const rows = [[
-                "Tanggal",
-                ...habits.map(function(habit) { return habit.name; }),
-                "Progress"
-            ]];
-
-            dates.forEach(function(date) {
-                let completedCount = 0;
-                const habitCells = habits.map(function(habit) {
-                    const completed = logsByDate[date][habit.id] === true;
-                    if (completed) { completedCount += 1; }
-                    return completed ? "✓" : "—";
-                });
-                rows.push([date, ...habitCells, completedCount + "/" + habits.length]);
-            });
-
-            const csv = rows.map(function(row) {
-                return row.map(function(value) {
-                    const text = String(value === null || value === undefined ? "" : value);
-                    return '"' + text.replace(/"/g, '""') + '"';
-                }).join(",");
-            }).join("\r\n");
-
-            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = "MPH-Habit-Tracker-6-Bulan.csv";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-        });
-
-    }
-
-
-    if (downloadHabitDataButton) {
-        downloadHabitDataButton.addEventListener("click", downloadHabitData);
-    }
-
-
-
-
 
 
 
@@ -8873,15 +8749,23 @@ supabaseScript.onload =
         const exportLogs =
             [...weightLogs].sort(function(a, b) {
                 return (
-                    new Date(a.logged_at) -
-                    new Date(b.logged_at)
+                    new Date(b.logged_at) -
+                    new Date(a.logged_at)
                 );
             });
 
         exportLogs.forEach(function(log) {
 
+            // Export tanggal sebagai teks agar Excel tidak mengubahnya
+            // menjadi serial date / menampilkan #### karena format kolom.
+            const exportDate =
+                log.logged_at
+                    .split("-")
+                    .reverse()
+                    .join("/");
+
             rows.push([
-                log.logged_at,
+                exportDate,
                 Number(log.weight)
             ]);
 
