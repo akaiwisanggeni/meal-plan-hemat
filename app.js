@@ -4600,230 +4600,277 @@ supabaseScript.onload =
             await getCurrentUser();
 
         if (!user) {
-            alert(
-                "Session login tidak ditemukan."
-            );
             return;
         }
 
-        if (!activeHabits || activeHabits.length === 0) {
-            alert(
-                "Belum ada habit aktif untuk diekspor."
-            );
-            return;
-        }
+        button.disabled = true;
 
-        const {
-            data,
-            error
-        } =
-            await window.mphSupabase
-                .from(
-                    "habit_logs"
-                )
-                .select(
-                    "habit_id, logged_date, completed"
-                )
-                .eq(
-                    "user_id",
-                    user.id
-                )
-                .gte(
-                    "logged_date",
-                    getSixMonthsAgo()
-                )
-                .lte(
-                    "logged_date",
-                    getTodayDate()
-                );
+        try {
 
-        if (error) {
-            console.error(
-                "MPH: Gagal mengambil habit logs untuk CSV.",
-                error
-            );
-
-            alert(
-                "Data habit gagal diambil."
-            );
-
-            return;
-        }
-
-        const logs =
-            data ||
-            [];
-
-        const rows = [
-            [
-                "Tanggal",
-                ...activeHabits.map(function(habit) {
-                    return habit.name;
-                }),
-                "Selesai",
-                "Total Habit"
-            ]
-        ];
-
-        const startDate =
-            new Date(
-                getSixMonthsAgo() +
-                "T00:00:00"
-            );
-
-        const endDate =
-            new Date(
-                getTodayDate() +
-                "T00:00:00"
-            );
-
-        // Export every calendar date in the 6-month range,
-        // newest first. This keeps the CSV complete even
-        // when there was no checklist on a particular day.
-        for (
-            let current = new Date(endDate);
-            current >= startDate;
-            current.setDate(current.getDate() - 1)
-        ) {
-
-            const year =
-                current.getFullYear();
-
-            const month =
-                String(
-                    current.getMonth() + 1
-                ).padStart(
-                    2,
-                    "0"
-                );
-
-            const day =
-                String(
-                    current.getDate()
-                ).padStart(
-                    2,
-                    "0"
-                );
-
-            const date =
-                year +
-                "-" +
-                month +
-                "-" +
-                day;
-
-            const dayLogs =
-                logs.filter(function(log) {
-                    return (
-                        log.logged_date ===
-                        date
+            // Export actual habit logs only. The 6-month window is a
+            // maximum limit; dates with no saved logs are not generated.
+            const {
+                data: logs,
+                error: logError
+            } =
+                await window.mphSupabase
+                    .from(
+                        "habit_logs"
+                    )
+                    .select(
+                        "habit_id, completed, logged_date"
+                    )
+                    .eq(
+                        "user_id",
+                        user.id
+                    )
+                    .gte(
+                        "logged_date",
+                        getSixMonthsAgo()
+                    )
+                    .lte(
+                        "logged_date",
+                        getTodayDate()
+                    )
+                    .order(
+                        "logged_date",
+                        {
+                            ascending:
+                                false
+                        }
                     );
+
+            if (logError) {
+                console.error(
+                    "MPH: Gagal mengambil habit logs untuk CSV.",
+                    logError
+                );
+
+                alert(
+                    "Data habit gagal diambil."
+                );
+
+                return;
+            }
+
+            if (!logs || logs.length === 0) {
+                alert(
+                    "Belum ada data habit yang tersimpan dalam 6 bulan terakhir."
+                );
+                return;
+            }
+
+            // Get all habits belonging to this user so historical logs from
+            // habits that are now inactive are not silently lost.
+            const {
+                data: habits,
+                error: habitError
+            } =
+                await window.mphSupabase
+                    .from(
+                        "habits"
+                    )
+                    .select(
+                        "id, name, sort_order"
+                    )
+                    .eq(
+                        "user_id",
+                        user.id
+                    )
+                    .order(
+                        "sort_order",
+                        {
+                            ascending:
+                                true
+                        }
+                    );
+
+            if (habitError) {
+                console.error(
+                    "MPH: Gagal mengambil habits untuk CSV.",
+                    habitError
+                );
+
+                alert(
+                    "Data habit gagal diambil."
+                );
+
+                return;
+            }
+
+            // Only include habits that actually have a saved log inside the
+            // export window. This keeps the CSV tied to real user activity.
+            const loggedHabitIds =
+                new Set(
+                    logs.map(function(log) {
+                        return log.habit_id;
+                    })
+                );
+
+            const exportHabits =
+                (habits || []).filter(function(habit) {
+                    return loggedHabitIds.has(habit.id);
                 });
 
-            const completedIds =
-                new Set(
-                    dayLogs
-                        .filter(function(log) {
-                            return log.completed === true;
-                        })
-                        .map(function(log) {
-                            return log.habit_id;
-                        })
+            if (exportHabits.length === 0) {
+                alert(
+                    "Belum ada data habit yang tersimpan dalam 6 bulan terakhir."
+                );
+                return;
+            }
+
+            const logsByDate =
+                new Map();
+
+            logs.forEach(function(log) {
+
+                if (!logsByDate.has(log.logged_date)) {
+                    logsByDate.set(
+                        log.logged_date,
+                        []
+                    );
+                }
+
+                logsByDate
+                    .get(log.logged_date)
+                    .push(log);
+
+            });
+
+            // Map the saved logs by habit for fast lookup while building rows.
+            const rows = [
+                [
+                    "Tanggal",
+                    ...exportHabits.map(function(habit) {
+                        return habit.name;
+                    }),
+                    "Selesai",
+                    "Total Habit"
+                ]
+            ];
+
+            Array.from(logsByDate.keys())
+                .sort(function(a, b) {
+                    return String(b).localeCompare(String(a));
+                })
+                .forEach(function(date) {
+
+                    const dateLogs =
+                        logsByDate.get(date) || [];
+
+                    const completedIds =
+                        new Set(
+                            dateLogs
+                                .filter(function(log) {
+                                    return log.completed === true;
+                                })
+                                .map(function(log) {
+                                    return log.habit_id;
+                                })
+                        );
+
+                    const completedCount =
+                        exportHabits.filter(function(habit) {
+                            return completedIds.has(habit.id);
+                        }).length;
+
+                    const dateParts =
+                        String(date || "").split("-");
+
+                    const exportDate =
+                        dateParts.length === 3
+                            ? dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0]
+                            : date;
+
+                    rows.push([
+                        exportDate,
+                        ...exportHabits.map(function(habit) {
+                            return completedIds.has(habit.id)
+                                ? "Selesai"
+                                : "Belum";
+                        }),
+                        completedCount,
+                        exportHabits.length
+                    ]);
+
+                });
+
+            const csv =
+                rows
+                    .map(function(row) {
+
+                        return row
+                            .map(function(value) {
+
+                                const csvText =
+                                    String(
+                                        value === null ||
+                                        value === undefined
+                                            ? ""
+                                            : value
+                                    );
+
+                                return '"' +
+                                    csvText.replace(
+                                        /"/g,
+                                        '""'
+                                    ) +
+                                    '"';
+
+                            })
+                            .join(",");
+
+                    })
+                    .join("\r\n");
+
+            const csvWithBom =
+                "\uFEFF" +
+                csv;
+
+            const blob =
+                new Blob(
+                    [csvWithBom],
+                    {
+                        type:
+                            "text/csv;charset=utf-8;"
+                    }
                 );
 
-            const completedCount =
-                activeHabits.filter(function(habit) {
-                    return completedIds.has(
-                        habit.id
-                    );
-                }).length;
+            const url =
+                URL.createObjectURL(
+                    blob
+                );
 
-            rows.push([
-                day +
-                    "/" +
-                    month +
-                    "/" +
-                    year,
-                ...activeHabits.map(function(habit) {
-                    return completedIds.has(habit.id)
-                        ? "Selesai"
-                        : "Belum";
-                }),
-                completedCount,
-                activeHabits.length
-            ]);
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+            link.href =
+                url;
+
+            link.download =
+                "MPH-Habit-Tracker-6-Bulan.csv";
+
+            document.body.appendChild(
+                link
+            );
+
+            link.click();
+
+            document.body.removeChild(
+                link
+            );
+
+            URL.revokeObjectURL(
+                url
+            );
+
+        } finally {
+
+            button.disabled = false;
+
         }
-
-        const csv =
-            rows
-                .map(function(row) {
-
-                    return row
-                        .map(function(value) {
-
-                            const csvText =
-                                String(
-                                    value === null ||
-                                    value === undefined
-                                        ? ""
-                                        : value
-                                );
-
-                            return '"' +
-                                csvText.replace(
-                                    /"/g,
-                                    '""'
-                                ) +
-                                '"';
-
-                        })
-                        .join(",");
-
-                })
-                .join("\r\n");
-
-        const csvWithBom =
-            "\uFEFF" +
-            csv;
-
-        const blob =
-            new Blob(
-                [csvWithBom],
-                {
-                    type:
-                        "text/csv;charset=utf-8;"
-                }
-            );
-
-        const url =
-            URL.createObjectURL(
-                blob
-            );
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-        link.href =
-            url;
-
-        link.download =
-            "MPH-Habit-Tracker-6-Bulan.csv";
-
-        document.body.appendChild(
-            link
-        );
-
-        link.click();
-
-        document.body.removeChild(
-            link
-        );
-
-        URL.revokeObjectURL(
-            url
-        );
 
     }
 
