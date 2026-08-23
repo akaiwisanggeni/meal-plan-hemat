@@ -271,6 +271,36 @@ supabaseScript.onload =
         );
 
 
+    const greetingName =
+        document.getElementById(
+            "greetingName"
+        );
+
+
+    const nameSetupModal =
+        document.getElementById(
+            "nameSetupModal"
+        );
+
+
+    const nameSetupInput =
+        document.getElementById(
+            "nameSetupInput"
+        );
+
+
+    const nameSetupSave =
+        document.getElementById(
+            "nameSetupSave"
+        );
+
+
+    const nameSetupError =
+        document.getElementById(
+            "nameSetupError"
+        );
+
+
 
 
 
@@ -374,9 +404,147 @@ supabaseScript.onload =
 
 
 
+    function setGreetingName(name) {
+
+        if (!greetingName) {
+            return;
+        }
+
+        greetingName.textContent =
+            name || "Kamu";
+
+    }
+
+
+    function getSavedUserName(user) {
+
+        if (!user || !user.user_metadata) {
+            return "";
+        }
+
+        return String(
+            user.user_metadata.full_name ||
+            user.user_metadata.name ||
+            ""
+        ).trim();
+
+    }
+
+
+    async function ensureUserName(session) {
+
+        const user =
+            session && session.user
+                ? session.user
+                : await getCurrentUser();
+
+        if (!user) {
+            return null;
+        }
+
+        const existingName =
+            getSavedUserName(user);
+
+        if (existingName) {
+            setGreetingName(existingName);
+            return user;
+        }
+
+        if (!nameSetupModal || !nameSetupInput || !nameSetupSave) {
+            setGreetingName("Kamu");
+            return user;
+        }
+
+        nameSetupModal.classList.add("show");
+        nameSetupModal.setAttribute("aria-hidden", "false");
+        nameSetupInput.value = "";
+        nameSetupError.textContent = "";
+
+        setTimeout(function () {
+            nameSetupInput.focus();
+        }, 50);
+
+        return new Promise(function (resolve) {
+
+            async function saveName() {
+
+                const name =
+                    nameSetupInput.value.trim();
+
+                if (!name) {
+                    nameSetupError.textContent =
+                        "Masukkan nama kamu dulu.";
+                    nameSetupInput.focus();
+                    return;
+                }
+
+                nameSetupSave.disabled = true;
+                nameSetupSave.textContent = "Menyimpan...";
+                nameSetupError.textContent = "";
+
+                const {
+                    data,
+                    error
+                } = await window.mphSupabase.auth.updateUser({
+                    data: {
+                        full_name: name
+                    }
+                });
+
+                if (error) {
+                    console.error(
+                        "MPH: Gagal menyimpan nama user.",
+                        error
+                    );
+                    nameSetupError.textContent =
+                        "Nama belum tersimpan. Coba lagi.";
+                    nameSetupSave.disabled = false;
+                    nameSetupSave.textContent = "Lanjut";
+                    return;
+                }
+
+                const updatedUser =
+                    data && data.user
+                        ? data.user
+                        : user;
+
+                setGreetingName(name);
+                nameSetupModal.classList.remove("show");
+                nameSetupModal.setAttribute("aria-hidden", "true");
+                nameSetupSave.disabled = false;
+                nameSetupSave.textContent = "Lanjut";
+                nameSetupSave.removeEventListener("click", saveName);
+                nameSetupInput.removeEventListener("keydown", handleKeydown);
+
+                resolve(updatedUser);
+
+            }
+
+            function handleKeydown(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    saveName();
+                }
+            }
+
+            nameSetupSave.addEventListener("click", saveName);
+            nameSetupInput.addEventListener("keydown", handleKeydown);
+
+        });
+
+    }
+
+
     async function showDashboard(
         session
     ) {
+
+        const namedUser =
+            await ensureUserName(session);
+
+        if (namedUser && session) {
+            session.user = namedUser;
+        }
 
         saveLastScreen("home");
 

@@ -3242,6 +3242,85 @@
             background: var(--green);
         }
 
+
+
+        /* FIRST LOGIN NAME MODAL */
+        #nameSetupModal {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(0, 0, 0, 0.42);
+        }
+
+        #nameSetupModal.show {
+            display: flex;
+        }
+
+        .name-setup-card {
+            width: min(100%, 360px);
+            background: #fffdf8;
+            border-radius: 24px;
+            padding: 28px 24px 24px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+        }
+
+        .name-setup-card h2 {
+            margin: 0 0 8px;
+            color: #174f31;
+            font-size: 24px;
+        }
+
+        .name-setup-card p {
+            margin: 0 0 20px;
+            color: #66706a;
+            line-height: 1.5;
+        }
+
+        #nameSetupInput {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 14px;
+            border: 1px solid #d7dccf;
+            border-radius: 12px;
+            font: inherit;
+            outline: none;
+            background: #fff;
+        }
+
+        #nameSetupInput:focus {
+            border-color: #1b5e3a;
+            box-shadow: 0 0 0 3px rgba(27, 94, 58, 0.10);
+        }
+
+        #nameSetupSave {
+            width: 100%;
+            margin-top: 14px;
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 12px;
+            background: #1b5e3a;
+            color: #fff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #nameSetupSave:disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
+
+        #nameSetupError {
+            min-height: 20px;
+            margin-top: 10px;
+            color: #b42318;
+            font-size: 13px;
+        }
+
 </style>
 
 
@@ -3342,6 +3421,29 @@
 
 
 
+
+
+    <!-- ==========================================
+         FIRST LOGIN NAME SETUP
+    ========================================== -->
+
+    <div id="nameSetupModal" aria-hidden="true">
+        <div class="name-setup-card" role="dialog" aria-modal="true" aria-labelledby="nameSetupTitle">
+            <h2 id="nameSetupTitle">Kenalan dulu 👋</h2>
+            <p>Masukkan nama kamu supaya dashboard bisa menyapamu dengan benar.</p>
+            <input
+                id="nameSetupInput"
+                type="text"
+                maxlength="40"
+                autocomplete="name"
+                placeholder="Nama kamu"
+            >
+            <div id="nameSetupError"></div>
+            <button id="nameSetupSave" type="button">Lanjut</button>
+        </div>
+    </div>
+
+
     <!-- ==========================================
          DASHBOARD
     ========================================== -->
@@ -3362,7 +3464,7 @@
 
 
                     <h1>
-                        Hi, Akai
+                        Hi, <span id="greetingName">Akai</span>
                     </h1>
 
 
