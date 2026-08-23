@@ -4585,7 +4585,7 @@ supabaseScript.onload =
     // DOWNLOAD HABIT DATA
     // ==========================================
 
-    function downloadHabitData() {
+    async function downloadHabitData() {
 
         const button =
             document.getElementById(
@@ -4596,17 +4596,63 @@ supabaseScript.onload =
             return;
         }
 
-        const dates =
-            getWeekDates(
-                habitWeekOffset
-            );
+        const user =
+            await getCurrentUser();
 
-        if (!dates || dates.length === 0) {
+        if (!user) {
             alert(
-                "Data habit belum tersedia."
+                "Session login tidak ditemukan."
             );
             return;
         }
+
+        if (!activeHabits || activeHabits.length === 0) {
+            alert(
+                "Belum ada habit aktif untuk diekspor."
+            );
+            return;
+        }
+
+        const {
+            data,
+            error
+        } =
+            await window.mphSupabase
+                .from(
+                    "habit_logs"
+                )
+                .select(
+                    "habit_id, logged_date, completed"
+                )
+                .eq(
+                    "user_id",
+                    user.id
+                )
+                .gte(
+                    "logged_date",
+                    getSixMonthsAgo()
+                )
+                .lte(
+                    "logged_date",
+                    getTodayDate()
+                );
+
+        if (error) {
+            console.error(
+                "MPH: Gagal mengambil habit logs untuk CSV.",
+                error
+            );
+
+            alert(
+                "Data habit gagal diambil."
+            );
+
+            return;
+        }
+
+        const logs =
+            data ||
+            [];
 
         const rows = [
             [
@@ -4619,15 +4665,64 @@ supabaseScript.onload =
             ]
         ];
 
-        dates.forEach(function(date) {
+        const startDate =
+            new Date(
+                getSixMonthsAgo() +
+                "T00:00:00"
+            );
 
-            const logs =
-                habitDataCache[date] ||
-                [];
+        const endDate =
+            new Date(
+                getTodayDate() +
+                "T00:00:00"
+            );
+
+        // Export every calendar date in the 6-month range,
+        // newest first. This keeps the CSV complete even
+        // when there was no checklist on a particular day.
+        for (
+            let current = new Date(endDate);
+            current >= startDate;
+            current.setDate(current.getDate() - 1)
+        ) {
+
+            const year =
+                current.getFullYear();
+
+            const month =
+                String(
+                    current.getMonth() + 1
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+            const day =
+                String(
+                    current.getDate()
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+            const date =
+                year +
+                "-" +
+                month +
+                "-" +
+                day;
+
+            const dayLogs =
+                logs.filter(function(log) {
+                    return (
+                        log.logged_date ===
+                        date
+                    );
+                });
 
             const completedIds =
                 new Set(
-                    logs
+                    dayLogs
                         .filter(function(log) {
                             return log.completed === true;
                         })
@@ -4638,19 +4733,17 @@ supabaseScript.onload =
 
             const completedCount =
                 activeHabits.filter(function(habit) {
-                    return completedIds.has(habit.id);
+                    return completedIds.has(
+                        habit.id
+                    );
                 }).length;
 
-            const dateParts =
-                String(date || "").split("-");
-
-            const exportDate =
-                dateParts.length === 3
-                    ? dateParts[2] + "/" + dateParts[1] + "/" + dateParts[0]
-                    : date;
-
             rows.push([
-                exportDate,
+                day +
+                    "/" +
+                    month +
+                    "/" +
+                    year,
                 ...activeHabits.map(function(habit) {
                     return completedIds.has(habit.id)
                         ? "Selesai"
@@ -4659,8 +4752,7 @@ supabaseScript.onload =
                 completedCount,
                 activeHabits.length
             ]);
-
-        });
+        }
 
         const csv =
             rows
@@ -4717,7 +4809,7 @@ supabaseScript.onload =
             url;
 
         link.download =
-            "MPH-Habit-Tracker-Minggu-Ini.csv";
+            "MPH-Habit-Tracker-6-Bulan.csv";
 
         document.body.appendChild(
             link
