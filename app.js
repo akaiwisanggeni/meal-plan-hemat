@@ -22,7 +22,7 @@ const SUPABASE_PUBLISHABLE_KEY =
 
 
 const REDIRECT_URL =
-    "https://mealplanhemat.vercel.app/";
+    "https://mealplanhemat.netlify.app/";
 
 
 
