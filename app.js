@@ -4607,8 +4607,9 @@ supabaseScript.onload =
 
         try {
 
-            // Export actual habit logs only. The 6-month window is a
-            // maximum limit; dates with no saved logs are not generated.
+            // Export only real saved activity inside the rolling 6-month
+            // window. Do not generate fake rows for dates before the user
+            // started using the tracker.
             const {
                 data: logs,
                 error: logError
@@ -4660,8 +4661,9 @@ supabaseScript.onload =
                 return;
             }
 
-            // Get all habits belonging to this user so historical logs from
-            // habits that are now inactive are not silently lost.
+            // Keep every habit that has real history in the export window,
+            // including habits that are now inactive. The column must stay so
+            // old history is never silently removed.
             const {
                 data: habits,
                 error: habitError
@@ -4671,7 +4673,7 @@ supabaseScript.onload =
                         "habits"
                     )
                     .select(
-                        "id, name, sort_order"
+                        "*"
                     )
                     .eq(
                         "user_id",
@@ -4698,8 +4700,6 @@ supabaseScript.onload =
                 return;
             }
 
-            // Only include habits that actually have a saved log inside the
-            // export window. This keeps the CSV tied to real user activity.
             const loggedHabitIds =
                 new Set(
                     logs.map(function(log) {
@@ -4707,9 +4707,111 @@ supabaseScript.onload =
                     })
                 );
 
+            // YYYY-MM-DD only. Using the date portion avoids timezone shifts
+            // when created_at / updated_at are ISO timestamps.
+            function toDateOnly(value) {
+                if (!value) {
+                    return "";
+                }
+
+                const text = String(value);
+
+                if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+                    return text;
+                }
+
+                const parsed = new Date(text);
+
+                if (!Number.isNaN(parsed.getTime())) {
+                    return [
+                        parsed.getFullYear(),
+                        String(parsed.getMonth() + 1).padStart(2, "0"),
+                        String(parsed.getDate()).padStart(2, "0")
+                    ].join("-");
+                }
+
+                const match = text.match(/(\d{4}-\d{2}-\d{2})/);
+                return match ? match[1] : "";
+            }
+
+
+            // Last real log per habit. This is also a safe fallback for older
+            // rows if the habits table does not have an updated_at/deactivated
+            // timestamp available.
+            const lastLogDateByHabit =
+                new Map();
+
+            logs.forEach(function(log) {
+                const date = toDateOnly(log.logged_date);
+                const current =
+                    lastLogDateByHabit.get(log.habit_id) || "";
+
+                if (!current || date > current) {
+                    lastLogDateByHabit.set(
+                        log.habit_id,
+                        date
+                    );
+                }
+            });
+
+            // Determine the active interval for every habit.
+            //
+            // - New habits become active from created_at.
+            // - Active habits remain active through today.
+            // - Inactive habits stop on deactivated_at when available.
+            // - If the database has no deactivated_at, use updated_at when it
+            //   exists; otherwise use the last real log date as a safe legacy
+            //   fallback. This prevents inactive habits from inflating totals.
+            const allHabitPeriods =
+                (habits || []).map(function(habit) {
+                    const startDate =
+                        toDateOnly(habit.created_at) ||
+                        getSixMonthsAgo();
+
+                    let endDate =
+                        getTodayDate();
+
+                    if (!habit.is_active) {
+                        const explicitEnd =
+                            toDateOnly(habit.deactivated_at);
+
+                        const updatedEnd =
+                            toDateOnly(habit.updated_at);
+
+                        const lastLog =
+                            lastLogDateByHabit.get(habit.id) || "";
+
+                        endDate =
+                            explicitEnd ||
+                            updatedEnd ||
+                            lastLog;
+                    }
+
+                    return {
+                        habit: habit,
+                        startDate: startDate,
+                        endDate: endDate
+                    };
+                });
+
+            const habitPeriods =
+                allHabitPeriods.filter(function(period) {
+                    const overlapsExportWindow =
+                        (!period.endDate || period.endDate >= getSixMonthsAgo()) &&
+                        period.startDate <= getTodayDate();
+
+                    // Keep currently active habits even if they have no
+                    // completed/unchecked log yet, so a newly-added habit
+                    // still gets its own column and earlier dates show "—".
+                    // Inactive habits are kept only when they have real logs
+                    // in the export window.
+                    return overlapsExportWindow &&
+                        (period.habit.is_active || loggedHabitIds.has(period.habit.id));
+                });
+
             const exportHabits =
-                (habits || []).filter(function(habit) {
-                    return loggedHabitIds.has(habit.id);
+                habitPeriods.map(function(period) {
+                    return period.habit;
                 });
 
             if (exportHabits.length === 0) {
@@ -4719,11 +4821,28 @@ supabaseScript.onload =
                 return;
             }
 
+            function isHabitActiveOnDate(
+                period,
+                date
+            ) {
+                if (!period.startDate || date < period.startDate) {
+                    return false;
+                }
+
+                if (
+                    period.endDate &&
+                    date > period.endDate
+                ) {
+                    return false;
+                }
+
+                return true;
+            }
+
             const logsByDate =
                 new Map();
 
             logs.forEach(function(log) {
-
                 if (!logsByDate.has(log.logged_date)) {
                     logsByDate.set(
                         log.logged_date,
@@ -4734,15 +4853,15 @@ supabaseScript.onload =
                 logsByDate
                     .get(log.logged_date)
                     .push(log);
-
             });
 
-            // Map the saved logs by habit for fast lookup while building rows.
             const rows = [
                 [
                     "Tanggal",
                     ...exportHabits.map(function(habit) {
-                        return habit.name;
+                        return habit.is_active
+                            ? habit.name
+                            : habit.name + " (inactive)";
                     }),
                     "Selesai",
                     "Total Habit"
@@ -4769,9 +4888,26 @@ supabaseScript.onload =
                                 })
                         );
 
+                    const activePeriods =
+                        habitPeriods.filter(function(period) {
+                            return isHabitActiveOnDate(
+                                period,
+                                date
+                            );
+                        });
+
+                    const activeHabitIds =
+                        new Set(
+                            activePeriods.map(function(period) {
+                                return period.habit.id;
+                            })
+                        );
+
                     const completedCount =
-                        exportHabits.filter(function(habit) {
-                            return completedIds.has(habit.id);
+                        activePeriods.filter(function(period) {
+                            return completedIds.has(
+                                period.habit.id
+                            );
                         }).length;
 
                     const dateParts =
@@ -4784,13 +4920,31 @@ supabaseScript.onload =
 
                     rows.push([
                         exportDate,
-                        ...exportHabits.map(function(habit) {
+                        ...habitPeriods.map(function(period) {
+                            const habit = period.habit;
+
+                            if (date < period.startDate) {
+                                return "—";
+                            }
+
+                            if (
+                                !habit.is_active &&
+                                period.endDate &&
+                                date > period.endDate
+                            ) {
+                                return "Tidak aktif";
+                            }
+
+                            if (!activeHabitIds.has(habit.id)) {
+                                return "—";
+                            }
+
                             return completedIds.has(habit.id)
                                 ? "Selesai"
                                 : "Belum";
                         }),
                         completedCount,
-                        exportHabits.length
+                        activePeriods.length
                     ]);
 
                 });
@@ -4873,7 +5027,6 @@ supabaseScript.onload =
         }
 
     }
-
 
     const downloadHabitDataButton =
         document.getElementById(
