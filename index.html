@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 
@@ -1076,107 +1076,6 @@
 
         }
 
-
-
-
-        /* ==========================================
-           PDF VIEWER
-        ========================================== */
-
-        #pdfViewerScreen {
-            display: none;
-            min-height: 100vh;
-            background: var(--cream);
-            padding-bottom: 24px;
-        }
-
-        .pdf-viewer-header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-height: 58px;
-            padding: 10px 18px;
-            background: rgba(255,253,248,.97);
-            border-bottom: 1px solid var(--line);
-            box-shadow: 0 2px 10px rgba(22,75,43,.06);
-        }
-
-        .pdf-viewer-back {
-            border: none;
-            background: transparent;
-            color: var(--green);
-            font-size: 25px;
-            line-height: 1;
-            font-weight: 800;
-            padding: 4px 2px;
-        }
-
-        .pdf-viewer-title {
-            min-width: 0;
-            color: var(--green);
-            font-size: 15px;
-            font-weight: 800;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pdf-viewer-content {
-            width: 100%;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 14px 10px 30px;
-        }
-
-        .pdf-viewer-status {
-            padding: 28px 12px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .pdf-page-wrap {
-            width: 100%;
-            margin: 0 auto 12px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .pdf-page-wrap canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-            max-width: 880px;
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,.08);
-        }
-
-        @media (max-width: 430px) {
-            .pdf-viewer-header {
-                min-height: 54px;
-                padding: 8px 14px;
-            }
-
-            .pdf-viewer-back {
-                font-size: 24px;
-            }
-
-            .pdf-viewer-title {
-                font-size: 14px;
-            }
-
-            .pdf-viewer-content {
-                padding: 8px 5px 24px;
-            }
-
-            .pdf-page-wrap {
-                margin-bottom: 8px;
-            }
-        }
 
 
 
@@ -2902,67 +2801,7 @@
                 font-size: 34px;
 
 
-            }
-
-
-
-
-            .streak-card {
-
-
-                min-width: 145px;
-                padding: 13px 16px;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-
-
-            }
-
-
-
-
-            .streak-number {
-
-
-                font-size: 30px;
-                line-height: 1;
-                white-space: nowrap;
-
-
-            }
-
-
-
-
-            .streak-label {
-
-
-                margin-top: 0;
-                font-size: 15px;
-                white-space: nowrap;
-
-
-            }
-
-
-
-
-            .streak-sub {
-
-
-                margin-top: 0;
-                margin-left: auto;
-                font-size: 14px;
-                white-space: nowrap;
-
-
-            }
-
-
-
-
-            .progress-columns {
+            }.progress-columns {
 
 
                 grid-template-columns: 1fr 1fr;
@@ -2970,8 +2809,6 @@
 
 
             }
-
-
 
 
             .progress-item {
@@ -2985,8 +2822,6 @@
             }
 
 
-
-
             .progress-item + .progress-item {
 
 
@@ -2995,78 +2830,6 @@
                 padding-left: 10px;
                 padding-top: 0;
                 margin-top: 0;
-
-
-            }
-
-
-
-
-            .progress-icon {
-
-
-                width: 52px;
-                height: 52px;
-                flex: 0 0 52px;
-
-
-            }
-
-
-
-
-            .progress-icon .mph-icon {
-
-
-                width: 40px;
-                height: 40px;
-
-
-            }
-
-
-
-
-            .progress-label {
-
-
-                font-size: 14px;
-                margin-bottom: 4px;
-
-
-            }
-
-
-
-
-            .progress-value {
-
-
-                font-size: 26px;
-
-
-            }
-
-
-
-
-            .progress-value span {
-
-
-                font-size: 15px;
-
-
-            }
-
-
-
-
-            .progress-note {
-
-
-                margin-top: 5px;
-                font-size: 11px;
-                line-height: 1.35;
 
 
             }
@@ -3266,20 +3029,25 @@
             }
 
 
-
-
             .streak-card {
 
 
                 width: 100%;
+                display: flex;
+                align-items: center;
+                gap: 6px;
 
 
             }
 
 
-
-
-            .greeting h1 {
+            .streak-label {
+                grid-column: 2;
+                grid-row: 1;
+                margin-top: 0;
+                font-size: 14px;
+                white-space: nowrap;
+            }.greeting h1 {
 
 
                 font-size: 32px;
@@ -3538,6 +3306,132 @@
             margin-top: 10px;
             color: #b42318;
             font-size: 13px;
+        }
+
+
+
+        /* ==========================================
+           IN-APP PDF VIEWER
+        ========================================== */
+
+        #pdfViewerScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            background: #f8f5ec;
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .pdf-viewer-shell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #f8f5ec;
+        }
+
+        .pdf-viewer-header {
+            flex: 0 0 auto;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 18px;
+            background: #fffdf8;
+            border-bottom: 1px solid #e5e0d4;
+            box-sizing: border-box;
+        }
+
+        #pdfViewerBackButton {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--green-dark);
+            font-size: 27px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #pdfViewerBackButton:hover {
+            background: #eef2e5;
+        }
+
+        #pdfViewerTitle {
+            margin: 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--green-dark);
+        }
+
+        #pdfViewerContent {
+            flex: 1 1 auto;
+            width: 100%;
+            min-width: 0;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 10px 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .pdf-page-wrap {
+            width: fit-content;
+            max-width: 100%;
+            flex: 0 0 auto;
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .10);
+        }
+
+        .pdf-page-wrap canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .pdf-viewer-status {
+            width: min(92%, 520px);
+            margin: 70px auto 0;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        @media (max-width: 650px) {
+            .pdf-viewer-header {
+                height: 52px;
+                padding: 0 12px;
+            }
+
+            #pdfViewerTitle {
+                font-size: 15px;
+            }
+
+            #pdfViewerContent {
+                padding: 10px 6px 24px;
+                gap: 10px;
+            }
+
+            .pdf-page-wrap {
+                width: 100%;
+            }
         }
 
 </style>
@@ -5529,50 +5423,6 @@
 
 
     <!-- ==========================================
-         PDF VIEWER SCREEN
-    ========================================== -->
-
-
-    <section id="pdfViewerScreen">
-
-        <header class="pdf-viewer-header">
-
-            <button
-                id="pdfViewerBackButton"
-                class="pdf-viewer-back"
-                type="button"
-                aria-label="Kembali ke Home"
-            >
-                ←
-            </button>
-
-            <div
-                id="pdfViewerTitle"
-                class="pdf-viewer-title"
-            >
-                Ebook
-            </div>
-
-        </header>
-
-        <div
-            id="pdfViewerContent"
-            class="pdf-viewer-content"
-        >
-            <div
-                id="pdfViewerStatus"
-                class="pdf-viewer-status"
-            >
-                Memuat ebook...
-            </div>
-        </div>
-
-    </section>
-
-
-
-
-    <!-- ==========================================
          HABIT SCREEN
     ========================================== -->
 
@@ -5803,6 +5653,37 @@
     </section>
 
 
+    <!-- ==========================================
+         IN-APP PDF VIEWER
+    ========================================== -->
+    <section
+        id="pdfViewerScreen"
+        aria-label="Ebook viewer"
+    >
+        <div class="pdf-viewer-shell">
+            <header class="pdf-viewer-header">
+                <button
+                    id="pdfViewerBackButton"
+                    type="button"
+                    aria-label="Kembali"
+                >
+                    ←
+                </button>
+                <h1 id="pdfViewerTitle">Ebook</h1>
+            </header>
+
+            <div id="pdfViewerContent">
+                <div
+                    id="pdfViewerStatus"
+                    class="pdf-viewer-status"
+                >
+                    Memuat ebook...
+                </div>
+            </div>
+        </div>
+    </section>
+
+
     <div
         id="habitModal"
         class="habit-modal"
@@ -5874,10 +5755,121 @@
 
 
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
     <script src="app.js"></script>
 
 
 </body>
 
 
-</html>
+</html
+
+            .streak-card {
+
+
+                min-width: 145px;
+                padding: 13px 16px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+
+
+            }
+
+
+            .streak-number {
+
+
+                font-size: 30px;
+                line-height: 1;
+                white-space: nowrap;
+
+
+            }
+
+
+            .streak-label {
+
+
+                margin-top: 0;
+                font-size: 15px;
+                white-space: nowrap;
+
+
+            }
+
+
+            .streak-sub {
+
+
+                margin-top: 0;
+                margin-left: auto;
+                font-size: 14px;
+                white-space: nowrap;
+
+
+            }
+
+
+            .progress-icon {
+
+
+                width: 52px;
+                height: 52px;
+                flex: 0 0 52px;
+
+
+            }
+
+
+            .progress-icon .mph-icon {
+
+
+                width: 40px;
+                height: 40px;
+
+
+            }
+
+
+            .progress-label {
+
+
+                font-size: 14px;
+                margin-bottom: 4px;
+
+
+            }
+
+
+            .progress-value {
+
+
+                font-size: 26px;
+
+
+            }
+
+
+            .progress-value span {
+
+
+                font-size: 15px;
+
+
+            }
+
+
+            .progress-note {
+
+
+                margin-top: 5px;
+                font-size: 11px;
+                line-height: 1.35;
+
+
+            }
+
+
+>
