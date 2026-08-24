@@ -917,84 +917,20 @@ supabaseScript.onload =
     }
 
 
-    let pdfJsLoadPromise = null;
-
-
-    function ensurePdfJs() {
-
-        if (
-            window.pdfjsLib &&
-            window.pdfjsLib.getDocument
-        ) {
-
-            return Promise.resolve();
-
-        }
-
-        if (pdfJsLoadPromise) {
-
-            return pdfJsLoadPromise;
-
-        }
-
-        pdfJsLoadPromise =
-            new Promise(function (resolve, reject) {
-
-                const script =
-                    document.createElement("script");
-
-                script.src =
-                    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-
-                script.async = true;
-
-                script.onload = function () {
-
-                    if (
-                        window.pdfjsLib &&
-                        window.pdfjsLib.getDocument
-                    ) {
-
-                        resolve();
-
-                    }
-
-                    else {
-
-                        reject(
-                            new Error(
-                                "PDF.js gagal dimuat."
-                            )
-                        );
-
-                    }
-
-                };
-
-                script.onerror = function () {
-
-                    reject(
-                        new Error(
-                            "PDF.js gagal dimuat."
-                        )
-                    );
-
-                };
-
-                document.head.appendChild(script);
-
-            });
-
-        return pdfJsLoadPromise;
-
-    }
-
-
     async function renderPdfDocument(
         pdfUrl
     ) {
 
-        await ensurePdfJs();
+        if (
+            !window.pdfjsLib ||
+            !window.pdfjsLib.getDocument
+        ) {
+
+            throw new Error(
+                "PDF.js tidak tersedia."
+            );
+
+        }
 
         window.pdfjsLib.GlobalWorkerOptions.workerSrc =
             "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
