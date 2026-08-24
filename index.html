@@ -390,16 +390,11 @@
         .streak-card {
 
 
-            width: 100%;
+            min-width: 190px;
             background: var(--white);
             border-radius: 22px;
-            padding: 18px 20px;
+            padding: 20px;
             box-shadow: 0 8px 25px rgba(0,0,0,.06);
-            display: grid;
-            grid-template-columns: auto 1fr;
-            align-items: center;
-            column-gap: 14px;
-            margin-bottom: 18px;
 
 
         }
@@ -413,22 +408,17 @@
             font-size: 42px;
             font-weight: 800;
             line-height: 1;
-            white-space: nowrap;
 
 
         }
 
 
-
-
-        .streak-text {
-            min-width: 0;
-        }
 
 
         .streak-label {
 
 
+            margin-top: 5px;
             font-size: 17px;
             font-weight: 700;
 
@@ -441,7 +431,7 @@
         .streak-sub {
 
 
-            margin-top: 4px;
+            margin-top: 8px;
             color: var(--green);
             font-weight: 600;
 
@@ -2816,6 +2806,25 @@
 
 
 
+            .streak-card {
+
+
+                min-width: 145px;
+                padding: 16px;
+
+
+            }
+
+
+
+
+            .streak-number {
+
+
+                font-size: 34px;
+
+
+            }
 
 
 
@@ -3059,23 +3068,43 @@
 
 
             .streak-card {
-                padding: 16px 18px;
-                column-gap: 12px;
+
+
+                width: 145px;
+                min-width: 145px;
+                padding: 12px;
+                display: grid;
+                grid-template-columns: auto 1fr 1fr;
+                column-gap: 8px;
+                align-items: center;
+
+
             }
 
 
             .streak-number {
-                font-size: 34px;
+                grid-column: 1;
+                grid-row: 1;
+                font-size: 30px;
+                white-space: nowrap;
             }
 
 
             .streak-label {
-                font-size: 16px;
+                grid-column: 2;
+                grid-row: 1;
+                margin-top: 0;
+                font-size: 14px;
+                white-space: nowrap;
             }
 
 
             .streak-sub {
-                font-size: 13px;
+                grid-column: 3;
+                grid-row: 1;
+                margin-top: 0;
+                font-size: 12px;
+                white-space: nowrap;
             }
 
 
@@ -3635,21 +3664,17 @@
                 </button>
 
 
-            </header>
+                <div class="streak-card">
 
 
-            <div class="streak-card">
+                    <div
+                        id="streakNumber"
+                        class="streak-number"
+                    >
+                        🔥 0
+                    </div>
 
 
-                <div
-                    id="streakNumber"
-                    class="streak-number"
-                >
-                    🔥 0
-                </div>
-
-
-                <div class="streak-text">
                     <div class="streak-label">
                         Day Streak
                     </div>
@@ -3658,10 +3683,12 @@
                     <div class="streak-sub">
                         Keep it up!
                     </div>
+
+
                 </div>
 
 
-            </div>
+            </header>
 
 
 
