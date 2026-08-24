@@ -2832,22 +2832,32 @@
             .progress-columns {
 
 
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 10px;
 
 
             }
 
 
+            .progress-item {
+
+
+                min-height: 92px;
+                gap: 9px;
+                min-width: 0;
+
+
+            }
 
 
             .progress-item + .progress-item {
 
 
-                border-left: none;
-                border-top: 1px solid var(--line);
-                padding-left: 0;
-                padding-top: 18px;
-                margin-top: 18px;
+                border-left: 1px solid var(--line);
+                border-top: none;
+                padding-left: 10px;
+                padding-top: 0;
+                margin-top: 0;
 
 
             }
@@ -3024,7 +3034,9 @@
 
 
                 position: relative;
-                flex-direction: column;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 10px;
 
 
             }
@@ -3049,12 +3061,48 @@
 
 
 
+            .greeting {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+
             .streak-card {
 
 
-                width: 100%;
+                width: 145px;
+                min-width: 145px;
+                padding: 12px;
+                display: grid;
+                grid-template-columns: auto 1fr;
+                column-gap: 9px;
+                align-items: center;
 
 
+            }
+
+
+            .streak-number {
+                grid-column: 1;
+                grid-row: 1 / span 2;
+                font-size: 30px;
+                white-space: nowrap;
+            }
+
+
+            .streak-label {
+                grid-column: 2;
+                grid-row: 1;
+                margin-top: 0;
+                font-size: 14px;
+            }
+
+
+            .streak-sub {
+                grid-column: 2;
+                grid-row: 2;
+                margin-top: 3px;
+                font-size: 12px;
             }
 
 
